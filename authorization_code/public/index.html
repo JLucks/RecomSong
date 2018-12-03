@@ -172,15 +172,29 @@
                   $('#loggedin').show();
                 }
             });
-
+            var recTracksPg = {};
             $.ajax({
                 url: 'https://api.spotify.com/v1/me/player/recently-played',
                 headers: {
                   'Authorization': 'Bearer ' + access_token
                 },
                 success: function(response) {
-                  console.log(response);
-                  recentlyPlayedPlaceholder.innerHTML = recentlyPlayedTemplate(response);
+                  console.log(response);                  
+                  recentlyPlayedPlaceholder.innerHTML = recentlyPlayedTemplate(response);                  
+                  for(i in response.items){
+                    $.ajax({
+                      url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + response.items[i].track.id,
+                      headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + access_token
+                      },
+                      success: function(response2) {
+                        console.log(response2);
+                        //recTracks = $.extend({}, recTracks, response2);
+                      }
+                    });
+                  }
                 }
             });
 
@@ -192,8 +206,24 @@
                 success: function(response) {
                   console.log(response);
                   topTracksPlaceholder.innerHTML = topTracksTemplate(response);
+                  for(i in response.items){
+                    $.ajax({
+                      url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + response.items[i].id,
+                      headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + access_token
+                      },
+                      success: function(response2) {
+                        console.log(response2);
+                        //recTracks = $.extend({}, recTracks, response2);
+                      }
+                    });
+                  }
                 }
             });
+
+          //console.log(recTracks);
 
           } else {
               // render initial screen

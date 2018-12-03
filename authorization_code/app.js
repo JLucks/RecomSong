@@ -109,9 +109,22 @@ app.get('/callback', function(req, res) {
           json: true
         };
 
+        var recTracks = {};
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
           console.log(body);
+          for(i in body.items){
+            var options2 = {
+              url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body.items[i].track.id,
+              headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token },
+              json: true
+            };
+            // use the access token to access the Spotify Web API
+            request.get(options2, function(error2, response2, body2) {
+              console.log(body2);
+              //recTracks = $.extend({}, recTracks, body);
+            });
+          }
         });
 
         options = {
@@ -123,8 +136,21 @@ app.get('/callback', function(req, res) {
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
           console.log(body);
+          for(i in body.items){
+            var options2 = {
+              url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body.items[i].id,
+              headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token },
+              json: true
+            };
+            // use the access token to access the Spotify Web API
+            request.get(options2, function(error2, response2, body2) {
+              console.log(body2);
+              //recTracks = $.extend({}, recTracks, body);
+            });
+          }
         });
 
+        //console.log(recTracks);
         // we can also pass the token to the browser to make requests from there
         res.redirect('/#' +
           querystring.stringify({
