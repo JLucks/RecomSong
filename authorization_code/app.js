@@ -14,7 +14,7 @@ var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
 var client_id = '31990f16afb4474ca0429bc69467dbf7'; // Your client id
-var client_secret = 'client_secret'; // Your secret
+var client_secret = 'secret'; // Your secret
 var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
 
 /**
@@ -46,7 +46,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email';
+  var scope = 'user-read-private user-read-email user-read-recently-played';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -94,6 +94,17 @@ app.get('/callback', function(req, res) {
 
         var options = {
           url: 'https://api.spotify.com/v1/me',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true
+        };
+
+        // use the access token to access the Spotify Web API
+        request.get(options, function(error, response, body) {
+          console.log(body);
+        });
+
+        options = {
+          url: 'https://api.spotify.com/v1/me/player/recently-played',
           headers: { 'Authorization': 'Bearer ' + access_token },
           json: true
         };
