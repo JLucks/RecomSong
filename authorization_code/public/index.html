@@ -44,7 +44,10 @@
         <div id="recently-played">
         </div>
         <div id="top-tracks">
+        </div>        
+        <div id="recom">
         </div>
+        <button class="btn btn-default" id="obtain-new-recom">Gerar Recomendação</button>
       </div>
     </div>
 
@@ -108,9 +111,26 @@
       </table>
     </script>
 
+    <script id="recom-template" type="text/x-handlebars-template">
+       <h2>Recomendação</h2>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+        </tr>
+        {{#items}}
+          <tr>
+            <td>{{track.id}}</td>
+            <td>{{track.name}}</td>
+          </tr>
+        {{/items}}
+      </table>
+    </script>
+
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script>
+      var recTracks = [];
       (function() {
 
         /**
@@ -143,6 +163,10 @@
             topTracksTemplate = Handlebars.compile(topTracksSource),
             topTracksPlaceholder = document.getElementById('top-tracks');
 
+       var recomSource = document.getElementById('recom-template').innerHTML,
+           recomTemplate = Handlebars.compile(recomSource),
+           recomPlaceholder = document.getElementById('recom');
+
         var params = getHashParams();
 
         var access_token = params.access_token,
@@ -165,22 +189,19 @@
                   'Authorization': 'Bearer ' + access_token
                 },
                 success: function(response) {
-                  console.log(response);
                   userProfilePlaceholder.innerHTML = userProfileTemplate(response);
 
                   $('#login').hide();
                   $('#loggedin').show();
                 }
             });
-            var recTracksPg = {};
             $.ajax({
                 url: 'https://api.spotify.com/v1/me/player/recently-played',
                 headers: {
                   'Authorization': 'Bearer ' + access_token
                 },
-                success: function(response) {
-                  console.log(response);                  
-                  recentlyPlayedPlaceholder.innerHTML = recentlyPlayedTemplate(response);                  
+                success: function(response) {                 
+                  recentlyPlayedPlaceholder.innerHTML = recentlyPlayedTemplate(response);             
                   for(i in response.items){
                     $.ajax({
                       url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + response.items[i].track.id,
@@ -190,11 +211,10 @@
                         'Authorization': 'Bearer ' + access_token
                       },
                       success: function(response2) {
-                        console.log(response2);
-                        //recTracks = $.extend({}, recTracks, response2);
+                        recTracks = recTracks.concat(response2.tracks);
                       }
                     });
-                  }
+                  }                  
                 }
             });
 
@@ -204,7 +224,6 @@
                   'Authorization': 'Bearer ' + access_token
                 },
                 success: function(response) {
-                  console.log(response);
                   topTracksPlaceholder.innerHTML = topTracksTemplate(response);
                   for(i in response.items){
                     $.ajax({
@@ -215,16 +234,12 @@
                         'Authorization': 'Bearer ' + access_token
                       },
                       success: function(response2) {
-                        console.log(response2);
-                        //recTracks = $.extend({}, recTracks, response2);
+                        recTracks = recTracks.concat(response2.tracks);
                       }
                     });
-                  }
+                  }                  
                 }
             });
-
-          //console.log(recTracks);
-
           } else {
               // render initial screen
               $('#login').show();
@@ -243,6 +258,17 @@
                 access_token: access_token,
                 refresh_token: refresh_token
               });
+            });
+          }, false);
+
+          document.getElementById('obtain-new-recom').addEventListener('click', function() {
+            $.ajax({
+              url: '/recomend',
+              data: {
+                'recTracks': recTracks
+              }
+            }).done(function(data) {
+              console.log(data.matrizAdj);
             });
           }, false);
         }

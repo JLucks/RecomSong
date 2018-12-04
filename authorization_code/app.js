@@ -12,6 +12,7 @@ var request = require('request'); // "Request" library
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
+var recom = require('./recom');
 
 var client_id = '31990f16afb4474ca0429bc69467dbf7'; // Your client id
 var client_secret = 'secret'; // Your secret
@@ -109,7 +110,6 @@ app.get('/callback', function(req, res) {
           json: true
         };
 
-        var recTracks = {};
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
           console.log(body);
@@ -122,7 +122,6 @@ app.get('/callback', function(req, res) {
             // use the access token to access the Spotify Web API
             request.get(options2, function(error2, response2, body2) {
               console.log(body2);
-              //recTracks = $.extend({}, recTracks, body);
             });
           }
         });
@@ -145,7 +144,6 @@ app.get('/callback', function(req, res) {
             // use the access token to access the Spotify Web API
             request.get(options2, function(error2, response2, body2) {
               console.log(body2);
-              //recTracks = $.extend({}, recTracks, body);
             });
           }
         });
@@ -189,6 +187,58 @@ app.get('/refresh_token', function(req, res) {
       });
     }
   });
+});
+
+app.get('/recomend', function(req, res) {
+
+  var recTracks = req.query.recTracks;
+  var recTracksFeatures = [];
+  var threeshold = 1;
+  for(var i = 0; i < recTracks.length; i++){
+    var options = {
+      url: 'https://api.spotify.com/v1/audio-features/' + recTracks[i].id,
+      headers: { 'Authorization': 'Bearer ' + access_token },
+      json: true
+    };
+
+    request.get(options, function(error, response, body) {
+      console.log(body);
+      recTracksFeatures = recTracksFeatures.concat(body);
+    });
+  }
+  var matrizAdj = [];
+  for(var i = 0; i < recTracksFeatures.length; i++){
+    var line = [];
+    for (var j = 0; j < recTracksFeatures.length; j++) {
+      if(i == 0) continue;
+      if(recom.isLigation(recTracksFeatures[i],recTracksFeatures[j],threeshold)){
+        line[line.length] = j;
+      }
+    }
+    matrizAdj[matrizAdj.length] = line;
+  }
+  res.send({
+    'matrizAdj' : matrizAdj
+  });
+  /**
+  var authOptions = {
+    url: 'https://accounts.spotify.com/api/token',
+    headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
+    form: {
+      grant_type: 'refresh_token',
+      refresh_token: refresh_token
+    },
+    json: true
+  };
+
+  request.post(authOptions, function(error, response, body) {
+    if (!error && response.statusCode === 200) {
+      var access_token = body.access_token;
+      res.send({
+        'access_token': access_token
+      });
+    }
+  });**/
 });
 
 console.log('Listening on 8888');
