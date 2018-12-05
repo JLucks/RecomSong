@@ -131,6 +131,7 @@
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script>
       var recTracks = [];
+      var matrizAdj;
       (function() {
 
         /**
@@ -263,12 +264,15 @@
 
           document.getElementById('obtain-new-recom').addEventListener('click', function() {
             $.ajax({
+              type: "POST",
               url: '/recomend',
               data: {
+                'access_token' : access_token,
                 'recTracks': recTracks
               }
             }).done(function(data) {
               console.log(data.matrizAdj);
+              matrizAdj = data.matrizAdj;
             });
           }, false);
         }
