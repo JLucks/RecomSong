@@ -12,6 +12,7 @@ var request = require('request'); // "Request" library
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
+var pagerank = require('./pagerank.js');
 
 var client_id = '31990f16afb4474ca0429bc69467dbf7'; // Your client id
 var client_secret = 'secret'; // Your secret
@@ -383,31 +384,20 @@ app.post('/recomend', function(req, res) {
       matrizAdj.push(line);
     }
   }, 3000); 
+  var myPagerank = setTimeout(function(){
+    var damping_factor = 0.85; //fator de amortecimento
+    var tolerance = 0.0001; //sensibilidade da convergência
+    pagerank(matrizAdj, damping_factor, tolerance,function(err, res){
+      if (err) throw new Error(err);
+      console.log(res);
+    });
+  }, 10000); 
   var myResp = setTimeout(function(){
     console.log(matrizAdj);
     res.send({
       'matrizAdj' : matrizAdj
     }); 
-  }, 20000); 
-  /**
-  var authOptions = {
-    url: 'https://accounts.spotify.com/api/token',
-    headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
-    form: {
-      grant_type: 'refresh_token',
-      refresh_token: refresh_token
-    },
-    json: true
-  };
-
-  request.post(authOptions, function(error, response, body) {
-    if (!error && response.statusCode === 200) {
-      var access_token = body.access_token;
-      res.send({
-        'access_token': access_token
-      });
-    }
-  });**/
+  }, 25000); 
 });
 
 console.log('Listening on 8888');

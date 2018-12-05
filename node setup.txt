@@ -1,0 +1,5 @@
+Instale o node js
+Na pasta RecomSong pelo cmd
+	npm install
+	npm i pagerank-js
+	npm install package-js
