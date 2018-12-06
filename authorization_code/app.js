@@ -13,6 +13,7 @@ var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 var pagerank = require('./pagerank.js');
+var recom = require('./recom.js');
 
 var client_id = '31990f16afb4474ca0429bc69467dbf7'; // Your client id
 var client_secret = 'secret'; // Your secret
@@ -52,7 +53,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email user-read-recently-played user-top-read user-library-read';
+  var scope = 'user-read-private user-read-email user-read-recently-played user-top-read user-library-read playlist-modify-public';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -106,7 +107,8 @@ app.get('/callback', function(req, res) {
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
-          console.log("Usuario Requisitado:" + body.display_name);
+          if (!error && response.statusCode === 200) 
+            console.log("Usuario Requisitado:" + body.display_name);
         });
 
         options = {
@@ -117,21 +119,25 @@ app.get('/callback', function(req, res) {
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
-          var count = 0;
-          for(i in body.items){
-            console.log("RRP"+i+" ID:"+ body.items[i].track.id);
-            var options2 = {
-              url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body.items[i].track.id,
-              headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token },
-              json: true
-            };
-            // use the access token to access the Spotify Web API
-            request.get(options2, function(error2, response2, body2) {
-              for(i in body2.tracks){
-                console.log("SRP"+count+" ID:"+ body2.tracks[i].id);
-                count++;
-              }
-            });
+          if (!error && response.statusCode === 200) {
+            var count = 0;
+            for(i in body.items){
+              console.log("RRP"+i+" ID:"+ body.items[i].track.id);
+              var options2 = {
+                url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body.items[i].track.id,
+                headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token },
+                json: true
+              };
+              // use the access token to access the Spotify Web API
+              request.get(options2, function(error2, response2, body2) {
+                if (!error && response.statusCode === 200) {
+                  for(i in body2.tracks){
+                    console.log("SRP"+count+" ID:"+ body2.tracks[i].id);
+                    count++;
+                  }
+                }
+              });
+            }
           }
         });
 
@@ -143,21 +149,25 @@ app.get('/callback', function(req, res) {
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
-          var count = 0;
-          for(i in body.items){            
-            console.log("RTT"+i+" ID:"+ body.items[i].id);
-            var options2 = {
-              url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body.items[i].id,
-              headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token },
-              json: true
-            };
-            // use the access token to access the Spotify Web API
-            request.get(options2, function(error2, response2, body2) {
-              for(i in body2.tracks){
-                console.log("STT"+count+" ID:"+ body2.tracks[i].id);
-                count++;
-              }
-            });
+          if (!error && response.statusCode === 200) {
+            var count = 0;
+            for(i in body.items){            
+              console.log("RTT"+i+" ID:"+ body.items[i].id);
+              var options2 = {
+                url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body.items[i].id,
+                headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token },
+                json: true
+              };
+              // use the access token to access the Spotify Web API
+              request.get(options2, function(error2, response2, body2) {
+                if (!error && response.statusCode === 200) {
+                  for(i in body2.tracks){
+                    console.log("STT"+count+" ID:"+ body2.tracks[i].id);
+                    count++;
+                  }
+                }
+              });
+            }
           }
         });
 
@@ -183,6 +193,7 @@ app.get('/refresh_token', function(req, res) {
   // requesting access token from refresh token
   var refresh_token = req.query.refresh_token;
   var authOptions = {
+    method: "POST",
     url: 'https://accounts.spotify.com/api/token',
     headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
     form: {
@@ -201,134 +212,6 @@ app.get('/refresh_token', function(req, res) {
     }
   });
 });
-
-var recom = (function(){
-  var my = {};
-  my.isLigation = function(trackA,trackB,threeshold){
-    var dist_key = trackB.key - trackA.key;
-    var dist_mode = trackB.mode - trackA.mode;
-    var dist_time = trackB.time_signature - trackA.time_signature;
-    var dist_acous = trackB.acousticness - trackA.acousticness;
-    var dist_dance = trackB.danceability - trackA.danceability;
-    var dist_energ = trackB.energy - trackB.energy;
-    var dist_instr = trackB.instrumentalness - trackA.instrumentalness;
-    var dist_live = trackB.liveness - trackA.liveness;
-    var dist_loud = trackB.loudness - trackA.loudness;
-    var dist_speec = trackB.speechiness - trackA.speechiness;
-    var dist_vale = trackB.valence - trackA.valence;
-    var dist = Math.hypot(dist_key,dist_mode,dist_time,dist_acous,dist_dance,dist_energ,dist_instr,dist_live,dist_loud,dist_speec,dist_vale);
-    if(dist <= threeshold){
-      return true;
-    }
-    else{
-      return false;
-    }
-  };
-  my.normalization = function(matrizOrig){
-    var matriz = matrizOrig.slice();
-    var min_key = matriz[0].key;
-    var min_mode = matriz[0].mode;
-    var min_time = matriz[0].time_signature;
-    var min_acous = matriz[0].acousticness;
-    var min_dance = matriz[0].danceability;
-    var min_energ = matriz[0].energy;
-    var min_instr = matriz[0].instrumentalness;
-    var min_live = matriz[0].liveness;
-    var min_loud = matriz[0].loudness;
-    var min_speec = matriz[0].speechiness;
-    var min_vale = matriz[0].valence;   
-    var max_key = matriz[0].key;
-    var max_mode = matriz[0].mode;
-    var max_time = matriz[0].time_signature;
-    var max_acous = matriz[0].acousticness;
-    var max_dance = matriz[0].danceability;
-    var max_energ = matriz[0].energy;
-    var max_instr = matriz[0].instrumentalness;
-    var max_live = matriz[0].liveness;
-    var max_loud = matriz[0].loudness;
-    var max_speec = matriz[0].speechiness;
-    var max_vale = matriz[0].valence;
-    for(var i = 1; i < matriz.lenght; i++){
-      if(matriz[i].key > max_key)
-        max_key = matriz[i].key;
-      else{
-        min_key = matriz[i].key;
-      }
-      if(matriz[i].mode > max_mode)
-        max_mode = matriz[i].mode;
-      else{
-        min_mode = matriz[i].mode;
-      }
-      if(matriz[i].time_signature > max_time)
-        max_time = matriz[i].time_signature;
-      else{
-        min_time = matriz[i].time_signature;
-      }
-      if(matriz[i].acousticness > max_acous)
-        max_acous = matriz[i].acousticness;
-      else{
-        min_acous = matriz[i].acousticness;
-      }
-      if(matriz[i].danceability > max_dance)
-        max_dance = matriz[i].danceability;
-      else{
-        min_dance = matriz[i].danceability;
-      }
-      if(matriz[i].energy > max_energ)
-        max_energ = matriz[i].energy;
-      else{
-        min_energ = matriz[i].energy;
-      }
-      if(matriz[i].instrumentalness > max_instr)
-        max_instr = matriz[i].instrumentalness;
-      else{
-        min_instr = matriz[i].instrumentalness;
-      }
-      if(matriz[i].liveness > max_live)
-        max_live = matriz[i].liveness;
-      else{
-        min_live = matriz[i].liveness;
-      }
-      if(matriz[i].loudness > max_loud)
-        max_loud = matriz[i].loudness;
-      else{
-        min_loud = matriz[i].loudness;
-      }
-      if(matriz[i].speechiness > max_speec)
-        max_speec = matriz[i].speechiness;
-      else{
-        min_speec = matriz[i].speechiness;
-      }
-      if(matriz[i].valence > max_vale)
-        max_vale = matriz[i].valence;
-      else{
-        min_vale = matriz[i].valence;
-      }
-    }
-    for(var i = 1; i < matriz.lenght; i++){
-      matriz[0].key = (matriz[0].key - min_key)/(max_key - min_key);
-      matriz[0].mode = (matriz[0].mode - min_mode)/(max_mode - min_mode);
-      matriz[0].time_signature = (matriz[0].time_signature - min_time)/(max_time - min_time);
-      matriz[0].acousticness = (matriz[0].acousticness - min_acous)/(max_acous - min_acous);
-      matriz[0].danceability = (matriz[0].danceability - min_dance)/(max_dance - min_dance);
-      matriz[0].energy = (matriz[0].energy - min_energ)/(max_energ - min_energ);
-      matriz[0].instrumentalness = (matriz[0].instrumentalness - min_instr)/(max_instr - min_instr);
-      matriz[0].liveness = (matriz[0].liveness - min_live)/(max_live - min_live);
-      matriz[0].loudness = (matriz[0].loudness - min_loud)/(max_loud - min_loud);
-      matriz[0].speechiness = (matriz[0].speechiness - min_speec)/(max_speec - min_speec);
-      matriz[0].valence = (matriz[0].valence - min_vale)/(max_vale - min_vale);
-    }
-    return matriz;
-  };
-  my.search = function(matriz, id){
-    for (var i = matriz.length - 1; i >= 0; i--) {
-      if(matriz[i].id == id)
-        return i;
-    };
-    return -1;
-  }
-  return my;
-}());
 
 app.post('/recomend', function(req, res) {
 
@@ -350,9 +233,11 @@ app.post('/recomend', function(req, res) {
   };
 
   request.get(options, function(error, response, body) {
-    recTracksFeatures = recTracksFeatures.concat(body.audio_features);
-    for(i in body.audio_features){
-      console.log("F"+i+" ID:"+ body.audio_features[i].id);
+    if (!error && response.statusCode === 200) {
+      recTracksFeatures = recTracksFeatures.concat(body.audio_features);
+      for(i in body.audio_features){
+        console.log("F"+i+" ID:"+ body.audio_features[i].id);
+      }
     }
   });
 
@@ -363,11 +248,13 @@ app.post('/recomend', function(req, res) {
   };
 
   request.get(options, function(error, response, body) {
-    recTracksFeatures = recTracksFeatures.concat(body.audio_features);
-    var count = 100;
-    for(i in body.audio_features){
-      console.log("F"+count+" ID:"+ body.audio_features[i].id);
-      count++;
+    if (!error && response.statusCode === 200) {
+      recTracksFeatures = recTracksFeatures.concat(body.audio_features);
+      var count = 100;
+      for(i in body.audio_features){
+        console.log("F"+count+" ID:"+ body.audio_features[i].id);
+        count++;
+      }
     }
   });
 
@@ -384,20 +271,70 @@ app.post('/recomend', function(req, res) {
       matrizAdj.push(line);
     }
   }, 3000); 
+  var pgTracks;
   var myPagerank = setTimeout(function(){
     var damping_factor = 0.85; //fator de amortecimento
     var tolerance = 0.0001; //sensibilidade da convergência
     pagerank(matrizAdj, damping_factor, tolerance,function(err, res){
       if (err) throw new Error(err);
-      console.log(res);
+      pgTracks = res;
     });
-  }, 10000); 
+  }, 8000);
+  console.log(pgTracks);
   var myResp = setTimeout(function(){
-    console.log(matrizAdj);
-    res.send({
-      'matrizAdj' : matrizAdj
-    }); 
-  }, 25000); 
+    var pgOrder = recom.orderGrowing(pgTracks,30);
+    var tracksPlaylist = {"tracks":[]};
+    for(var i = 0; i < pgOrder.length; i++){
+      var ind = recom.search(recTracks, recTracksFeatures[pgOrder[i]].id);
+      if(ind != -1)
+        tracksPlaylist.tracks.push(recTracks[ind]);
+    }
+    setTimeout(function(){
+      res.send({
+        'tracksPlaylist' : tracksPlaylist
+      }); 
+    }, 3000);
+  }, 16000); 
+});
+
+app.post('/playlist', function(req, res) {
+  var tracksPlaylist = req.body.tracksPlaylist;
+  var access_token = req.body.access_token;
+  var userInfo = req.body.userInfo;
+  var dataH = new Date();
+  var dia = dataH.getDate();
+  var mes = dataH.getMonth();
+  var ano = dataH.getYear();
+  var hora = dataH.getHours();
+  var min = dataH.getMinutes();
+  var str_P = dia + '/' + (mes+1) + '/' + ano + " "+hora + ':' + min;
+  var jsonData = {
+    "name": "RecomSong",
+    "description": str_P,
+    "public": true
+  };
+  var options = {
+    type: 'POST',
+    url: 'https://api.spotify.com/v1/users/'+userInfo.id+'/playlists',
+    data: jsonData,
+    dataType: 'json',
+    headers: {
+      'Authorization': 'Bearer ' + access_token
+    },
+    contentType: 'application/json'
+  };
+
+  // use the access token to access the Spotify Web API
+  request.post(options, function(error, response, body) {
+    console.log(response);
+    if (!error && response.statusCode === 200) {
+      console.log("Nome da playlist:" + body.name);
+      console.log("ID:" + body.id);        
+      res.send({
+        'playlist' : body.name
+      });    
+    }
+  });
 });
 
 console.log('Listening on 8888');

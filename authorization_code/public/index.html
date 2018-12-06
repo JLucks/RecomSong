@@ -33,7 +33,7 @@
     <div class="container">
       <div id="login">
         <h1>Sistema de recomendação de música com utilização do algoritmo PageRank</h1>
-        <a href="/login" class="btn btn-primary">Logar no Spotify</a>
+        <a href="/login" class="btn btn-primary">Entrar</a>
       </div>
       <div id="loggedin">
         <div id="user-profile">
@@ -46,7 +46,8 @@
         <div id="top-tracks">
         </div>        
         <div id="recom">
-        </div>
+        </div>        
+        <button class="btn btn-default" id="obtain-new-playlist">Salvar como Playlist</button>
         <button class="btn btn-default" id="obtain-new-recom">Gerar Recomendação</button>
       </div>
     </div>
@@ -112,26 +113,27 @@
     </script>
 
     <script id="recom-template" type="text/x-handlebars-template">
-       <h2>Recomendação</h2>
+      <h2>Recomendação</h2>
       <table>
         <tr>
           <th>ID</th>
           <th>Nome</th>
         </tr>
-        {{#items}}
+        {{#tracks}}
           <tr>
-            <td>{{track.id}}</td>
-            <td>{{track.name}}</td>
+            <td>{{id}}</td>
+            <td>{{name}}</td>
           </tr>
-        {{/items}}
-      </table>
+        {{/tracks}}
+      </table>      
     </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script>
       var recTracks = [];
-      var matrizAdj;
+      var tracksPlaylist;
+      var userInfo;
       (function() {
 
         /**
@@ -184,6 +186,13 @@
               refresh_token: refresh_token
             });
 
+            document.getElementById('obtain-new-playlist').disabled = true;
+
+            alert("Bem Vindo!\nAguarde alguns segundos enquanto processamos suas informações!\nIremos notifica-lo quando terminarmos!");
+            setTimeout(function(){
+              alert("Pronto!\nVocê pode gerar sua recomendação no botão no fim da página!");
+            }, 3000);
+
             $.ajax({
                 url: 'https://api.spotify.com/v1/me',
                 headers: {
@@ -191,7 +200,7 @@
                 },
                 success: function(response) {
                   userProfilePlaceholder.innerHTML = userProfileTemplate(response);
-
+                  userInfo = response;
                   $('#login').hide();
                   $('#loggedin').show();
                 }
@@ -263,6 +272,7 @@
           }, false);
 
           document.getElementById('obtain-new-recom').addEventListener('click', function() {
+            alert("Gerando recomendação!\nPor favor, aguarde alguns segundos para o processamento!\nIremos notifica-lo quando terminarmos!");
             $.ajax({
               type: "POST",
               url: '/recomend',
@@ -271,8 +281,25 @@
                 'recTracks': recTracks
               }
             }).done(function(data) {
-              console.log(data.matrizAdj);
-              matrizAdj = data.matrizAdj;
+              alert("Pronto!\nRecomendação gerada!");              
+              document.getElementById('obtain-new-playlist').disabled = false;
+              tracksPlaylist = data.tracksPlaylist;              
+              recomPlaceholder.innerHTML = recomTemplate(tracksPlaylist);
+            });
+          }, false);
+
+           document.getElementById('obtain-new-playlist').addEventListener('click', function() {            
+            alert("Gerando playlist e adicionando a conta!\nPor favor, aguarde alguns segundos para o processamento!\nIremos notifica-lo quando terminarmos!");
+            $.ajax({
+              type: "POST",
+              url: '/playlist',
+              data: {
+                'access_token' : access_token,
+                'userInfo' : userInfo,
+                'tracksPlaylist': tracksPlaylist
+              }
+            }).done(function(data) {
+                alert("Pronto!\nA playlist:"+data.playlist+" com as recomendações foi gerada!");
             });
           }, false);
         }
