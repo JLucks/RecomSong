@@ -171,7 +171,6 @@ app.get('/callback', function(req, res) {
           }
         });
 
-        //console.log(recTracks);
         // we can also pass the token to the browser to make requests from there
         res.redirect('/#' +
           querystring.stringify({
@@ -343,6 +342,11 @@ app.post('/playlist', function(req, res) {
       });   
     }
   });
+});
+
+app.get('/logout', function(req, res) {  
+  console.log("Logout");
+  res.send({'status': true});
 });
 
 console.log('Listening on 8888');

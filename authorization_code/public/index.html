@@ -49,6 +49,8 @@
         </div>        
         <button class="btn btn-default" id="obtain-new-playlist">Salvar como Playlist</button>
         <button class="btn btn-default" id="obtain-new-recom">Gerar Recomendação</button>
+        <button class="btn btn-default" id="exit">Sair</button>
+        <button class="btn btn-default" id="logout">Desvincular conta Spotify</button>
       </div>
     </div>
 
@@ -300,6 +302,23 @@
               }
             }).done(function(data) {
                 alert("Pronto!\nA playlist:"+data.playlist+" com as recomendações foi gerada!");
+            });
+          }, false);
+
+          document.getElementById('exit').addEventListener('click', function() {
+            window.location = "http://localhost:8888/";
+          }, false);
+
+          document.getElementById('logout').addEventListener('click', function() {
+            $.ajax({
+              url: '/logout'
+            }).done(function(data) {
+              if(data.status){
+                var r = confirm("Ao desvincular estará efetuando o logout de sua conta Spotify neste navegador!\n\nDesvincular?");
+                if (r == true) {
+                  window.location = "https://www.spotify.com/logout/";
+                }
+              }
             });
           }, false);
         }
