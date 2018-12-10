@@ -17,7 +17,7 @@ var recom = require('./recom.js');
 
 var client_id = '31990f16afb4474ca0429bc69467dbf7'; // Your client id
 var client_secret = '100561904f354f1d9eb53118b37dcdc5'; // Your secret
-var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+var redirect_uri = 'https://recomsong.herokuapp.com:8888/callback'; // Your redirect uri
 
 /**
  * Generates a random string containing numbers and letters
