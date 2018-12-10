@@ -17,7 +17,7 @@ var recom = require('./recom.js');
 
 var client_id = '31990f16afb4474ca0429bc69467dbf7'; // Your client id
 var client_secret = '100561904f354f1d9eb53118b37dcdc5'; // Your secret
-var redirect_uri = 'https://recomsong.herokuapp.com:8888/callback'; // Your redirect uri
+var redirect_uri = 'https://recomsong.herokuapp.com/callback'; // Your redirect uri
 
 /**
  * Generates a random string containing numbers and letters
@@ -38,6 +38,8 @@ var stateKey = 'spotify_auth_state';
 
 var app = express();
 
+app.set('view engine', 'ejs');
+
 app.use(express.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser());
@@ -46,6 +48,11 @@ app.use(express.static(__dirname + '/public'))
 var bodyParser = require('body-parser');
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit:50000}));
+
+app.get('/', function(req, res) {
+    // ejs render automatically looks in the views folder
+    res.render('index');
+});
 
 app.get('/login', function(req, res) {
 
@@ -349,5 +356,7 @@ app.get('/logout', function(req, res) {
   res.send({'status': true});
 });
 
-console.log('Listening on 8888');
-app.listen(8888);
+var port = process.env.PORT || 8080;
+app.listen(port, function() {
+    console.log('Our app is running on http://localhost:' + port);
+});
