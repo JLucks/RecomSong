@@ -53,7 +53,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email user-read-recently-played user-top-read user-library-read playlist-modify-public';
+  var scope = 'user-read-private user-read-email user-read-recently-played user-top-read user-library-read playlist-modify-private';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -106,9 +106,9 @@ app.get('/callback', function(req, res) {
         };
 
         // use the access token to access the Spotify Web API
-        request.get(options, function(error, response, body) {
-          if (!error && response.statusCode === 200) 
-            console.log("Usuario Requisitado:" + body.display_name);
+        request.get(options, function(error2, response2, body2) {
+          if (!error2 && response2.statusCode === 200) 
+            console.log("Usuario Requisitado:" + body2.display_name);
         });
 
         options = {
@@ -118,21 +118,21 @@ app.get('/callback', function(req, res) {
         };
 
         // use the access token to access the Spotify Web API
-        request.get(options, function(error, response, body) {
-          if (!error && response.statusCode === 200) {
+        request.get(options, function(error2, response2, body2) {
+          if (!error2 && response2.statusCode === 200) {
             var count = 0;
-            for(i in body.items){
-              console.log("RRP"+i+" ID:"+ body.items[i].track.id);
+            for(i in body2.items){
+              console.log("RRP"+i+" ID:"+ body2.items[i].track.id);
               var options2 = {
-                url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body.items[i].track.id,
+                url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body2.items[i].track.id,
                 headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token },
                 json: true
               };
               // use the access token to access the Spotify Web API
-              request.get(options2, function(error2, response2, body2) {
-                if (!error && response.statusCode === 200) {
-                  for(i in body2.tracks){
-                    console.log("SRP"+count+" ID:"+ body2.tracks[i].id);
+              request.get(options2, function(error3, response3, body3) {
+                if (!error3 && response3.statusCode === 200) {
+                  for(i in body3.tracks){
+                    console.log("SRP"+count+" ID:"+ body3.tracks[i].id);
                     count++;
                   }
                 }
@@ -148,21 +148,21 @@ app.get('/callback', function(req, res) {
         };
 
         // use the access token to access the Spotify Web API
-        request.get(options, function(error, response, body) {
-          if (!error && response.statusCode === 200) {
+        request.get(options, function(error2, response2, body2) {
+          if (!error2 && response2.statusCode === 200) {
             var count = 0;
-            for(i in body.items){            
-              console.log("RTT"+i+" ID:"+ body.items[i].id);
+            for(i in body2.items){            
+              console.log("RTT"+i+" ID:"+ body2.items[i].id);
               var options2 = {
-                url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body.items[i].id,
+                url: 'https://api.spotify.com/v1/recommendations?limit=5&seed_tracks=' + body2.items[i].id,
                 headers: {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + access_token },
                 json: true
               };
               // use the access token to access the Spotify Web API
-              request.get(options2, function(error2, response2, body2) {
-                if (!error && response.statusCode === 200) {
-                  for(i in body2.tracks){
-                    console.log("STT"+count+" ID:"+ body2.tracks[i].id);
+              request.get(options2, function(error3, response3, body3) {
+                if (!error3 && response3.statusCode === 200) {
+                  for(i in body3.tracks){
+                    console.log("STT"+count+" ID:"+ body3.tracks[i].id);
                     count++;
                   }
                 }
@@ -260,11 +260,12 @@ app.post('/recomend', function(req, res) {
 
   var matrizAdj = [];
   var myAdj = setTimeout(function(){
-    for(var i = 0; i < recTracksFeatures.length; i++){
+    var matrizFeatures = recom.normalization(recTracksFeatures);
+    for(var i = 0; i < matrizFeatures.length; i++){
       var line = [];
-      for (var j = 0; j < recTracksFeatures.length; j++) {
+      for (var j = 0; j < matrizFeatures.length; j++) {
         if(i == j) continue;
-        if(recom.isLigation(recTracksFeatures[i],recTracksFeatures[j],threeshold)){
+        if(recom.isLigation(matrizFeatures[i],matrizFeatures[j],threeshold)){
           line.push(j);
         }
       }
@@ -280,7 +281,6 @@ app.post('/recomend', function(req, res) {
       pgTracks = res;
     });
   }, 8000);
-  console.log(pgTracks);
   var myResp = setTimeout(function(){
     var pgOrder = recom.orderGrowing(pgTracks,30);
     var tracksPlaylist = {"tracks":[]};
@@ -301,38 +301,46 @@ app.post('/playlist', function(req, res) {
   var tracksPlaylist = req.body.tracksPlaylist;
   var access_token = req.body.access_token;
   var userInfo = req.body.userInfo;
-  var dataH = new Date();
-  var dia = dataH.getDate();
-  var mes = dataH.getMonth();
-  var ano = dataH.getYear();
-  var hora = dataH.getHours();
-  var min = dataH.getMinutes();
-  var str_P = dia + '/' + (mes+1) + '/' + ano + " "+hora + ':' + min;
-  var jsonData = {
-    "name": "RecomSong",
-    "description": str_P,
-    "public": true
-  };
   var options = {
-    type: 'POST',
     url: 'https://api.spotify.com/v1/users/'+userInfo.id+'/playlists',
-    data: jsonData,
-    dataType: 'json',
+    body: JSON.stringify({
+        'name': 'RecomSong',
+        'public': false
+    }),
+    dataType:'json',
     headers: {
-      'Authorization': 'Bearer ' + access_token
-    },
-    contentType: 'application/json'
+        'Authorization': 'Bearer ' + access_token,
+        'Content-Type': 'application/json',
+    }
   };
-
   // use the access token to access the Spotify Web API
   request.post(options, function(error, response, body) {
-    console.log(response);
-    if (!error && response.statusCode === 200) {
-      console.log("Nome da playlist:" + body.name);
-      console.log("ID:" + body.id);        
-      res.send({
-        'playlist' : body.name
-      });    
+    if (!error && (response.statusCode === 200 || response.statusCode === 201)) {
+      var playlist = JSON.parse(body);
+      console.log("Nome da playlist:" + playlist.name);
+      console.log("ID:" + playlist.id); 
+      var uriTracks = [];  
+      for(var i = 0; i < tracksPlaylist.tracks.length; i++) {
+        uriTracks.push("spotify:track:"+tracksPlaylist.tracks[i].id);
+      }  
+      var options2 =  {
+        url: 'https://api.spotify.com/v1/playlists/'+playlist.id+'/tracks',
+        body: JSON.stringify({
+          'uris' : uriTracks
+        }),
+        dataType:'json',
+        headers: {
+            'Authorization': 'Bearer ' + access_token,
+            'Content-Type': 'application/json',
+        }
+      }; 
+      request.post(options2, function(error2, response2, body2) {
+        if (!error2 && (response2.statusCode === 200 || response2.statusCode === 201)) {
+          res.send({
+            'playlist' : playlist.name
+          }); 
+        }
+      });   
     }
   });
 });

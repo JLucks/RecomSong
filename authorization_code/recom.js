@@ -102,17 +102,17 @@ var Recom = (function(){
       }
     }
     for(var i = 1; i < matriz.lenght; i++){
-      matriz[0].key = (matriz[0].key - min_key)/(max_key - min_key);
-      matriz[0].mode = (matriz[0].mode - min_mode)/(max_mode - min_mode);
-      matriz[0].time_signature = (matriz[0].time_signature - min_time)/(max_time - min_time);
-      matriz[0].acousticness = (matriz[0].acousticness - min_acous)/(max_acous - min_acous);
-      matriz[0].danceability = (matriz[0].danceability - min_dance)/(max_dance - min_dance);
-      matriz[0].energy = (matriz[0].energy - min_energ)/(max_energ - min_energ);
-      matriz[0].instrumentalness = (matriz[0].instrumentalness - min_instr)/(max_instr - min_instr);
-      matriz[0].liveness = (matriz[0].liveness - min_live)/(max_live - min_live);
-      matriz[0].loudness = (matriz[0].loudness - min_loud)/(max_loud - min_loud);
-      matriz[0].speechiness = (matriz[0].speechiness - min_speec)/(max_speec - min_speec);
-      matriz[0].valence = (matriz[0].valence - min_vale)/(max_vale - min_vale);
+      matriz[i].key = (matriz[i].key - min_key)/(max_key - min_key);
+      matriz[i].mode = (matriz[i].mode - min_mode)/(max_mode - min_mode);
+      matriz[i].time_signature = (matriz[i].time_signature - min_time)/(max_time - min_time);
+      matriz[i].acousticness = (matriz[i].acousticness - min_acous)/(max_acous - min_acous);
+      matriz[i].danceability = (matriz[i].danceability - min_dance)/(max_dance - min_dance);
+      matriz[i].energy = (matriz[i].energy - min_energ)/(max_energ - min_energ);
+      matriz[i].instrumentalness = (matriz[i].instrumentalness - min_instr)/(max_instr - min_instr);
+      matriz[i].liveness = (matriz[i].liveness - min_live)/(max_live - min_live);
+      matriz[i].loudness = (matriz[i].loudness - min_loud)/(max_loud - min_loud);
+      matriz[i].speechiness = (matriz[i].speechiness - min_speec)/(max_speec - min_speec);
+      matriz[i].valence = (matriz[i].valence - min_vale)/(max_vale - min_vale);
     }
     return matriz;
   };
