@@ -12,12 +12,13 @@ var request = require('request'); // "Request" library
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
-var pagerank = require('./pagerank.js');
-var recom = require('./recom.js');
+var pagerank = require('./src/pagerank.cjs');
+var recom = require('./src/recom.cjs');
+const port = 5173;
 
 var client_id = '31990f16afb4474ca0429bc69467dbf7'; // Your client id
 var client_secret = 'secret'; // Your secret
-var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+var redirect_uri = `http://localhost:${port}/callback`; // Your redirect uri
 
 /**
  * Generates a random string containing numbers and letters
@@ -38,7 +39,7 @@ var stateKey = 'spotify_auth_state';
 
 var app = express();
 
-app.use(express.static(__dirname + '/public'))
+app.use(express.static(__dirname))
    .use(cors())
    .use(cookieParser());
 
@@ -349,5 +350,4 @@ app.get('/logout', function(req, res) {
   res.send({'status': true});
 });
 
-console.log('Listening on 8888');
-app.listen(8888);
+app.listen(port, () => {console.log(`Listening on ${port}`)});

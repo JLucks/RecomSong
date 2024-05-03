@@ -1,15 +1,24 @@
 {
   "author": "Spotify",
-  "name": "web-api-auth-examples",
+  "name": "web-api-spotify",
   "description": "Basic examples of the Spotify authorization flows through OAuth 2",
   "version": "0.0.2",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "request": "^2.88.2",
     "cookie-parser": "^1.4.3",
-    "cors": "^2.8.4",
-    "express": "~4.16.0",
     "package-js": "^1.0.0",
     "pagerank-js": "^0.3.0",
-    "querystring": "~0.2.0",
-    "request": "~2.83.0"
+    "querystring": "^0.2.0"
   }
 }

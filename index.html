@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    <meta charset="UTF-8"/>
     <title>RecomSong</title>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
     <style type="text/css">
@@ -27,6 +28,7 @@
           background-color: #dddddd;
       }
     </style>
+    <script src="src/app.cjs" type="commonjs"></script>
   </head>
 
   <body background="content/back.jpg">
@@ -306,7 +308,7 @@
           }, false);
 
           document.getElementById('exit').addEventListener('click', function() {
-            window.location = "http://localhost:8888/";
+            window.location = "http://localhost:5173/";
           }, false);
 
           document.getElementById('logout').addEventListener('click', function() {
